@@ -89,11 +89,12 @@ def train(args):
                  "order_rng": order_generator.get_state(), "order": order, "data_cursor": data_cursor,
                  "trainable_state": {n: p.detach().cpu() for n,p in model.named_parameters() if p.requires_grad}}
         torch.save(state, destination / "resume.pt")
-        metadata.update({"training_steps": step, "train_minutes": elapsed/60,
+        metadata.update({"training_steps": step, "skipped_overflow_updates": skipped_updates, "train_minutes": elapsed/60,
                          "peak_vram_gb": peak, "checkpoint": str(destination), "complete": final})
         (directory / "run.json").write_text(json.dumps(metadata, indent=2))
         print(json.dumps({"event": "checkpoint", "step": step, "path": str(destination)}), flush=True)
 
+    skipped_updates = 0
     optimizer.zero_grad(set_to_none=True)
     with (directory / "train.jsonl").open("a" if args.resume else "w") as log:
         while step < args.max_steps:
@@ -117,14 +118,20 @@ def train(args):
                 scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
             norm = torch.nn.utils.clip_grad_norm_(parameters, 1.0)
-            if not torch.isfinite(norm):
-                raise FloatingPointError(f"Nonfinite gradient norm before update {step+1}")
-            old_scale = scaler.get_scale()
+            overflow = not torch.isfinite(norm)
+            # fp16 overflow at the initial loss scale is normal: GradScaler skips
+            # the update and halves the scale. Skipped batches never count toward
+            # the 300 applied optimizer updates; excessive skipping is still fatal.
             scaler.step(optimizer)
             scaler.update()
             optimizer.zero_grad(set_to_none=True)
-            if scaler.get_scale() < old_scale:
-                raise FloatingPointError("GradScaler skipped update; investigate before resuming")
+            if overflow:
+                skipped_updates += 1
+                print(json.dumps({"event": "skipped_overflow_update", "attempt_step": step+1,
+                                  "scale": scaler.get_scale(), "skipped_total": skipped_updates}), flush=True)
+                if skipped_updates > 20:
+                    raise FloatingPointError("More than 20 skipped fp16 overflow updates")
+                continue
             scheduler.step()
             step += 1
             row = {"step": step, "loss": sum(losses)/len(losses),
