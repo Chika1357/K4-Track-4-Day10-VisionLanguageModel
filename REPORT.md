@@ -1,7 +1,7 @@
 Họ tên: Nguyễn Tuấn Thành — Mã số: 2A202602640
 `dataset_version`: d10-21e4070301
 
-> **Trạng thái báo cáo (bản tạm, 2026-10-14):** đã hoàn thành chuẩn bị dữ liệu, E0 zero-shot, kiểm chứng encoding/mask/gradient và E1. E4 rank 64, phân tích lỗi và ảnh minh họa **chưa xong**; các ô và câu hỏi phụ thuộc kết quả đó ghi `<điền sau khi chạy ...>` và sẽ cập nhật bằng số đo thật.
+> **Trạng thái báo cáo (2026-10-14):** đã chạy đủ E0–E4 (E4: rank 4 và 64 trên nền E3) và chấm trên 311 ảnh test bằng `score.py` gốc. E5 (bonus GRPO) **chưa chạy**. Mọi số liệu lấy từ `report/evidence/*.json`; chấm lại độc lập khớp.
 >
 > Môi trường: NVIDIA RTX 6000 Ada (GPU vật lý số 1, máy `bcseserver1`), **không phải Colab T4**; VRAM/thời gian không so trực tiếp với số mẫu trên T4. Model `Qwen/Qwen3-VL-4B-Instruct` ghim revision `ebb281ec70b05090aa6165b016eac8ec08e71b17`, NF4 4-bit cho LLM, giữ ViT/projector/`lm_head` không lượng tử hoá. Python 3.10.12, torch 2.14.1 (CUDA 13.0), transformers 5.19.0, peft 0.21.2, trl 1.9.2, bitsandbytes 0.50.2.
 
@@ -13,7 +13,8 @@ Họ tên: Nguyễn Tuấn Thành — Mã số: 2A202602640
 | E1 | LoRA LLM (r=16) | 33,030,144 | 6.685 (train) | 8.16 (train 300 bước) | 0.2913 | 0.2535–0.3300 | 1.238 | 0.2049 | 0.2212 | 0.5405 |
 | E2 | + projector | 142,135,296 | 8.408 (train) | 8.24 (train 300 bước) | 0.3270 | 0.2903–0.3694 | 1.119 | 0.1717 | 0.2667 | 0.5857 |
 | E3 | + LoRA ViT | 148,426,752 | 8.595 (train) | 9.75 (train 300 bước) | 0.4342 | 0.3953–0.4790 | 0.897 | 0.3519 | 0.3553 | 0.6715 |
-| E4 | rank LoRA: r=4 và r=64 (alpha=2r) | | <điền sau khi chạy E4> | | | | | | | |
+| E4 r=4 | E3 với rank 4 (alpha=8) | 118,935,552 | 8.123 (train) | 9.80 | 0.4076 | 0.3650–0.4499 | 0.965 | 0.2857 | 0.3401 | 0.6502 |
+| E4 r=64 | E3 với rank 64 (alpha=128) | 266,391,552 | 10.571 (train) | 10.11 | 0.4419 | 0.3993–0.4868 | 0.971 | 0.2870 | 0.3872 | 0.6806 |
 
 E1: `parse_valid_rate=0.9968` (≥ 0.95), F1 tăng +0.2038 so với E0 (≥ 0.10); val F1=0.1910 (CI95 0.1576–0.2226); suy luận test 4.98 phút, 4.04 GB. VRAM đỉnh đo bằng `torch.cuda.max_memory_allocated` (bytes/1e9). E2: `parse_valid_rate=0.9968`, val F1=0.2920 (CI95 0.2530–0.3293); khác biệt E2−E1 trên test +0.0357 nhưng CI95 hai setup chồng lấp. E3: `parse_valid_rate=1.0000`, val F1=0.3626 (CI95 0.3224–0.4045), 2 bước fp16 overflow bị bỏ (không tính vào 300 update), được chọn làm nền E4 theo val. Số tham số lấy từ preflight trên model thật (`report/runs/preflight_e{1,2,3}.json`), chưa phải số của run huấn luyện. E0: `parse_valid_rate=0.8457`, `missing_predictions=0`, `n_images=311`, P=0.1208, R=0.0686 (TP=40, FP=291, FN=583), mean IoU của cặp khớp 0.600; batch 4, greedy, `max_new_tokens=256`.
 
@@ -64,7 +65,7 @@ Kiểm chứng: chấm lại **cùng file** `work/e0.jsonl` bằng `scripts/scor
 - `--coord norm1000`: F1 = 0.0875 (CI95 0.0620–0.1143), khớp `report/evidence/e0.json`.
 - `--coord pixel`: F1 = **0.000**, TP=0, FP=331, FN=583, mean IoU 0 (`report/runs/e0_coordinate_diagnostic.json`).
 
-`parse_valid_rate` không đổi (0.8457) vì chỉ phép đổi tọa độ khác nhau. Phía huấn luyện, nhãn YOLO được đổi sang 0–1000 (`lab/data.py`, có unit test), nên model học đúng thang nó xuất ra. Sau khi có model nền E4 sẽ chạy lại chẩn đoán này trên output đã fine-tune.
+`parse_valid_rate` không đổi (0.8457) vì chỉ phép đổi tọa độ khác nhau. Phía huấn luyện, nhãn YOLO được đổi sang 0–1000 (`lab/data.py`, có unit test), nên model học đúng thang nó xuất ra. Chẩn đoán tương tự trên output của E3 (`report/runs/coordinate_diagnostic.json`): đọc đúng norm1000 cho F1 = 0.4342, đọc như pixel cho F1 = 0.0000 (TP=0), nên đây là yếu tố quyết định đúng/sai chứ không phải chi tiết nhỏ.
 
 ### Câu 4 — Mask loss: vì sao chỉ tính loss trên phần trả lời? Điều gì xảy ra nếu tính trên cả prompt và token ảnh?
 
@@ -102,27 +103,96 @@ Phân bố lớp khác nhau rõ giữa các split (val chỉ có 66 pothole, nh�
 
 ### Câu 7 — So sánh E1/E2/E3: mở projector và LoRA trên ViT có đáng không (F1, CI95, VRAM, thời gian)?
 
-<điền sau khi chạy E1–E3: so F1, CI95, VRAM đỉnh, phút huấn luyện, dùng cùng seed 42, lr 2e-4, batch 2 × grad_accum 4, 300 optimizer step>
+| | Tham số huấn luyện | VRAM đỉnh (GB) | Phút train | F1 test | CI95 | F1 val |
+|---|---|---|---|---|---|---|
+| E1 | 33.0M | 6.685 | 8.16 | 0.2913 | 0.2535–0.3300 | 0.1910 |
+| E2 | 142.1M | 8.408 | 8.24 | 0.3270 | 0.2903–0.3694 | 0.2920 |
+| E3 | 148.4M | 8.595 | 9.75 | 0.4342 | 0.3953–0.4790 | 0.3626 |
 
-Đã biết trước khi huấn luyện: E2 tăng số tham số huấn luyện gấp 4.3 lần so với E1 (142.1M so với 33.0M), E3 chỉ thêm 6.3M so với E2.
+- **E1 → E2 (mở projector):** F1 test +0.0358 (val +0.1010). Phải trả 4.3 lần số tham số huấn luyện và +1.72 GB VRAM, thời gian gần như không đổi (+0.07 phút). CI95 của E1 và E2 chồng lấp rộng, nên trên test chỉ có thể nói "có xu hướng tốt hơn", chưa phải khác biệt chắc chắn. Val cùng chiều và lớn hơn, nhưng val và test là hai tập khác nhau.
+- **E2 → E3 (thêm LoRA ViT):** F1 test +0.1072 (val +0.0705), chỉ thêm 6.3M tham số, +0.19 GB và +1.52 phút. CI95 của E2 (cận trên 0.3694) nằm dưới cận dưới của E3 (0.3953), không chồng lấp. Đây là bước đáng giá nhất trong ba bước: chi phí rất nhỏ, cải thiện rõ ở cả ba lớp (pothole 0.172 → 0.352, crack 0.267 → 0.355, manhole 0.586 → 0.672) và FP/ảnh giảm 1.119 → 0.897.
+- **Giới hạn:** một seed (42) cho mỗi setup. Thời gian đo trên RTX 6000 Ada, không so được với T4. E3 bỏ 2 bước fp16 overflow (xem `BAO_CAO_LOI_VA_LUU_Y.md`), nên thứ tự dữ liệu lệch 2 batch so với E1/E2.
+
+Kết luận: với 300 bước, mở LoRA trên ViT đáng làm; mở projector rẻ về thời gian nhưng tốn bộ nhớ và lợi ích trên test chưa chắc chắn.
 
 ### Câu 8 — Tập test có 311 ảnh: khoảng tin cậy rộng thế nào, và điều đó giới hạn kết luận so sánh các setup ra sao?
 
-Mới có E0: CI95 bootstrap 0.0620–0.1143, rộng 0.052 quanh F1 = 0.0875 (khoảng ±30% tương đối). <điền sau khi chạy E1–E4: so độ rộng CI và mức chồng lấp giữa các setup>
+Độ rộng CI95 bootstrap (1.000 lần, theo ảnh) của F1:
+
+| E0 | E1 | E2 | E3 | E4 r=4 | E4 r=64 |
+|---|---|---|---|---|---|
+| 0.052 | 0.077 | 0.079 | 0.084 | 0.085 | 0.088 |
+
+Ở F1 ≈ 0.4 (E3), nửa độ rộng là ±0.042, tức khoảng ±10% tương đối; càng tốt thì khoảng càng rộng tuyệt đối. Hệ quả cho so sánh:
+
+- Chênh lệch lớn tách được: E0 → E1 (+0.204) và E2 → E3 (+0.107) có CI không chồng lấp.
+- Chênh lệch nhỏ không tách được: E1 → E2 (+0.036), E3 → E4 r=64 (+0.008), r=4 so với r=64 (+0.034) đều chồng lấp.
+- CI theo ảnh có thể **lạc quan**: các frame liền kề cùng phiên (test chỉ gồm một số phiên) tương quan nhau, nên 311 ảnh không phải 311 mẫu độc lập. CI chồng lấp chỉ mô tả bất định, không phải phép kiểm định chênh lệch.
+- Chỉ có một seed và 583 box test (121 pothole), nên F1 từng lớp càng nhiễu hơn F1 tổng.
 
 ### Câu 9 — Phân tích lỗi theo lớp: lớp nào kém nhất và vì sao (kích thước box, số mẫu, ngữ nghĩa)? Kèm ảnh minh hoạ.
 
-Ở E0, crack kém nhất (F1 0.0353: 9 TP, 202 FP, 290 FN), dù là lớp nhiều box nhất trong test (299). Model gốc tách vết nứt dài thành chuỗi box nhỏ lặp lại, không khớp cách gán nhãn. Ảnh nhãn GT: `report/figures/labels_*.png`. <điền sau khi chạy setup nền: phân tích theo lớp và ít nhất 6 ảnh dự đoán đúng/sai>
+Theo lớp trên test, model nền E3 (`report/evidence/e3.json`):
+
+| Lớp | Box test | Diện tích box trung vị (% ảnh) | P | R | F1 | TP / FP / FN |
+|---|---|---|---|---|---|---|
+| pothole | 121 | 0.42 | 0.400 | 0.314 | **0.352** | 38 / 57 / 83 |
+| crack | 299 | 1.98 | 0.350 | 0.361 | 0.355 | 108 / 201 / 191 |
+| manhole | 163 | 0.67 | 0.816 | 0.571 | 0.672 | 93 / 21 / 70 |
+
+- **Kém nhất:** pothole (0.352) và crack (0.355) gần như bằng nhau, đều chỉ bằng nửa manhole. Pothole kém vì **ít mẫu** (1.074 box train, chỉ 66 box ở val) và **box nhỏ** (trung vị 0.42% ảnh, cỡ 30×30 px trên ảnh 640×360), nên lệch vài pixel là IoU < 0.5. Recall 0.314: 83/121 box bị bỏ sót.
+- **Crack** có nhiều mẫu nhất (1.750 box train) nhưng 201 FP và 191 FN. Giả thuyết (chưa kiểm chứng bằng nhãn): vết nứt dài, mảnh, ranh giới không rõ nên model và người gán nhãn chia/gộp vết nứt khác nhau; ảnh `prediction_e3_3.png` cho thấy box crack dự đoán ngắn hơn GT nên IoU dưới 0.5.
+- **Manhole** tốt nhất: hình dạng rõ, tương phản mạnh, precision 0.816.
+- Tính ổn định: giữa E3 và E4 F1 pothole dao động 0.352 → 0.286 → 0.287 trong khi F1 tổng đổi ít, cho thấy F1 từng lớp trên 121 box nhiễu.
+
+Ảnh minh họa (GT xanh, dự đoán cam; 6 ảnh thật từ test với E3, `report/figures/prediction_e3_{1..6}.png`, manifest `selection_e3.json` ghi TP/FP/FN):
+
+| Ảnh | ID | Loại | TP/FP/FN |
+|---|---|---|---|
+| 1 | vlcsnap-00202 | đúng | 1/0/0 |
+| 2 | vlcsnap-00200 | FP (manhole đặt sai chỗ, manhole GT ở mép phải bị bỏ sót) | 1/1/1 |
+| 3 | vlcsnap-00201 | bỏ sót (crack dự đoán quá ngắn, manhole nhỏ ở xa bị bỏ) | 0/1/2 |
+| 4 | vlcsnap-00203 | đại diện | 0/1/1 |
+| 5 | vlcsnap-00204 | đúng | 1/0/0 |
+| 6 | vlcsnap-00205 | đại diện | 1/2/1 |
+
+Toàn test có 106 ảnh đúng hoàn toàn, 167 ảnh có FP, 187 ảnh bỏ sót, 0 output sai JSON. Ảnh 4 và 6 tôi chưa xem trực quan; mô tả chỉ dựa trên TP/FP/FN. Biểu đồ: `f1_comparison.png`, `training_loss.png`.
 
 ### Câu 10 — E4: bạn đổi biến nào, kết quả thế nào, và kết luận có đáng tin không?
 
-Biến đã chọn: rank LoRA r ∈ {4, 64}, alpha = 2r. Setup nền là setup tốt nhất trên val trong E1–E3; giữ nguyên seed, lr, batch hiệu dụng, số bước, processor và prompt. <điền sau khi chạy E4>
+**Biến đổi:** rank LoRA r ∈ {4, 64} với alpha = 2r (scale cố định = 2), trên nền **E3** (setup có F1 val cao nhất trong E1–E3: 0.3626). Giữ nguyên seed 42, lr 2e-4, batch 2 × grad_accum 4, 300 bước, processor, prompt và cách suy luận. Rank 16 chính là E3.
+
+| Rank | Tham số train | VRAM (GB) | Phút | F1 test | CI95 | F1 val |
+|---|---|---|---|---|---|---|
+| 4 | 118.9M | 8.123 | 9.80 | 0.4076 | 0.3650–0.4499 | 0.3320 |
+| 16 (E3) | 148.4M | 8.595 | 9.75 | 0.4342 | 0.3953–0.4790 | 0.3626 |
+| 64 | 266.4M | 10.571 | 10.11 | 0.4419 | 0.3993–0.4868 | 0.3545 |
+
+**Kết quả:** trên test, F1 tăng đơn điệu theo rank (+0.034 từ r=4 lên r=64), nhưng **trên val thì r=16 tốt hơn r=64** (0.3626 so với 0.3545). Hai tập cho thứ tự khác nhau ở cặp r=16/r=64.
+
+**Có đáng tin không?** Chỉ ở mức thận trọng:
+- Mọi CI95 chồng lấp mạnh; r=4 so với r=64 chênh +0.034 nằm trong độ bất định.
+- Một seed, và thứ tự r=16/r=64 đảo giữa val và test, tức chênh lệch r=16 so với r=64 nằm trong nhiễu.
+- Tổng tham số huấn luyện của r=4 vẫn là 118.9M vì phần projector (109.1M) cố định; rank chỉ đổi phần LoRA.
+- Rank 64 tốn thêm 2.0 GB VRAM so với r=16 mà không có lợi ích chắc chắn.
+
+Kết luận hợp lý: giữ r=16 (E3) vì cân bằng tốt nhất. Chưa đủ bằng chứng để nói rank cao hơn thực sự tốt hơn; cần nhiều seed.
 
 ## Nhìn lại
 
-<điền đầy đủ sau khi hoàn tất. Hiện đã ghi nhận:>
+**Lỗi mà công cụ chấm không bắt được** (đều do tôi phát hiện nhờ audit/kiểm tra riêng):
+- Skip list `["visual", "lm_head"]` trong ví dụ đề âm thầm lượng tử hoá ViT/projector với transformers 5.19.0; scorer chỉ nhận prediction nên không thấy. Chỉ audit kiểu layer mới phát hiện (`visual_and_lm_head_not_4bit=true`).
+- LoRA ViT thiếu `attn.proj` sẽ thiếu module (không đủ 96/348) mà vẫn chạy được và vẫn cho F1.
+- E3 dừng vì gradient fp16 tràn ở scale 65536. Bước tràn được bỏ và không tính vào 300 update (E3 bỏ 2, mỗi run E4 bỏ 3); chi tiết trong `BAO_CAO_LOI_VA_LUU_Y.md`.
+- Venv kế thừa Jinja2 3.0.3 làm chat template lỗi.
+- E0: 43/311 output bị cắt vì model lặp box đến hết `max_new_tokens`; `parse_valid_rate` gộp lỗi bị cắt và lỗi cú pháp.
 
-- Ví dụ skip list `["visual", "lm_head"]` âm thầm lượng tử hoá ViT/projector với transformers 5.19.0. Công cụ chấm không bắt lỗi này, chỉ audit kiểu layer mới phát hiện.
-- Ví dụ LoRA ViT thiếu `attn.proj`.
-- Venv kế thừa Jinja2 3.0.3 của hệ thống, làm chat template lỗi.
-- Test template `tests/test_configs_and_docs.py` yêu cầu REPORT.md còn placeholder, mâu thuẫn với checker nộp bài. Giữ nguyên test, sẽ công bố ngoại lệ khi hoàn thiện báo cáo.
+**Điều chưa hiểu / chưa kiểm chứng:**
+- Vì sao rank cao làm giảm F1 pothole (0.352 → 0.287) trong khi F1 tổng tăng; có thể chỉ là nhiễu trên 121 box.
+- Nhãn crack có nhất quán không (một vết hay nhiều đoạn); mới là giả thuyết từ một ảnh, cần xem thêm nhãn GT.
+- Chưa có thí nghiệm đối chứng "loss trên cả chuỗi" cho Câu 4.
+- Mới có một seed; chưa đo phương sai giữa các lần chạy.
+
+**Điều kiện thí nghiệm:** RTX 6000 Ada chứ không phải T4. Server dùng chung; job của người dùng khác làm hỏng hai lần chạy (E2 lần đầu, E3 lần đầu) do OOM; các run lỗi được giữ lại và chạy lại từ đầu với cùng cấu hình.
+
+**Ngoại lệ kiểm thử:** `tests/test_configs_and_docs.py` yêu cầu REPORT.md còn chuỗi giữ chỗ của mẫu (dấu `<` rồi chữ "điền"), mâu thuẫn với checker nộp bài (yêu cầu xoá). Giữ nguyên test gốc; báo cáo hoàn chỉnh làm test đó fail, đã nêu trong `BAO_CAO_LOI_VA_LUU_Y.md`.
