@@ -40,5 +40,5 @@ Không dùng số F1/VRAM/phút mẫu trong đề làm kết quả. Chỉ điề
 - Lần chạy E3 lúc 08:26 UTC (GPU 1 đã trống) dừng sau 13 giây: `FloatingPointError: Nonfinite gradient norm before update 3`. Run lỗi giữ ở `work/e3_failed_nonfinite_grad_20261014T0826`.
 - Nguyên nhân: GradScaler khởi tạo ở scale 65536; LoRA trên ViT (E3) làm gradient fp16 tràn ở một số bước đầu. Đây là hành vi bình thường của GradScaler (bỏ bước, giảm scale), nhưng vòng train cũ coi mọi trường hợp là lỗi. E1/E2 không gặp tràn nên không bị ảnh hưởng và kết quả không đổi.
 - Sửa `lab/train.py`: bước tràn bị bỏ, **không** tính vào 300 optimizer update, ghi `skipped_overflow_updates` vào `run.json`; dừng nếu vượt 20 lần. Các bước đã áp dụng vẫn đúng 300.
-- E3 chạy lại: 1 lần bỏ ở lần thử bước 4 (scale 65536 → 32768), sau đó ổn định. Vì batch bị bỏ vẫn tiêu thụ dữ liệu nên thứ tự mẫu của E3 lệch 1 batch so với E1/E2; đây là khác biệt nhỏ, được công bố.
+- E3 chạy lại: 2 lần bỏ bước (lần đầu ở lần thử bước 4, scale 65536 → 32768), sau đó ổn định. Vì batch bị bỏ vẫn tiêu thụ dữ liệu nên thứ tự mẫu của E3 lệch 2 batch so với E1/E2; đây là khác biệt nhỏ, được công bố.
 - Chuỗi E3 → E4 chạy trong tmux `lab` trên server để không phụ thuộc kết nối.

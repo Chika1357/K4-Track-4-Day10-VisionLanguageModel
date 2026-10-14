@@ -1,0 +1,11 @@
+{
+  "base_setup": "E3",
+  "selection_split": "val",
+  "selection_metric": "micro.f1",
+  "tie_break": "simpler setup",
+  "validation_scores": {
+    "E1": 0.19102040816326532,
+    "E2": 0.2920203735144312,
+    "E3": 0.3625531914893617
+  }
+}
