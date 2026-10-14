@@ -27,3 +27,10 @@ Venv kế thừa gói hệ thống ban đầu dùng Jinja2 3.0.3; chat template 
 ## Nguyên tắc số liệu
 
 Không dùng số F1/VRAM/phút mẫu trong đề làm kết quả. Chỉ điền báo cáo từ evidence và log thực tế; công bố rõ GPU RTX 6000 Ada thay Colab T4.
+
+## Tranh chấp GPU 1 khi chạy E2 (2026-10-14)
+
+- Lúc 05:05 UTC, tài khoản `research03` khởi chạy lại job Gemma 12B DDP (`train_gemma_ner.py --gpus 0,1,2`, resume từ checkpoint-1000) trên cả ba GPU, chiếm 43 GB GPU 1 khi E1 đang suy luận. E1 đã hoàn tất bình thường; số liệu chấm lại độc lập khớp.
+- E2 bắt đầu 05:11 và OOM ngay bước đầu (GPU 1 còn 15 MB). Không có checkpoint nào được ghi. Run lỗi được giữ lại ở `work/e2_failed_oom_20261014T0511` cùng log/trạng thái tương ứng; E2 sẽ chạy lại từ đầu với cùng cấu hình.
+- Người dùng chọn dừng job research03, nhưng `research02` không có quyền gửi tín hiệu tới tiến trình của user khác (`Operation not permitted`). Không thử vượt quyền.
+- Đã đặt `work/wait_gpu1.sh` trên server: chờ GPU 1 trống ≥ 20 GB rồi chạy E2 → E3 tuần tự. Số phút huấn luyện chỉ so sánh được khi GPU 1 không bị chia sẻ; nếu có chia sẻ sẽ ghi rõ.
