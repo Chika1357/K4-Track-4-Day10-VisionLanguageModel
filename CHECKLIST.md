@@ -17,7 +17,11 @@ Nguyễn Tuấn Thành — 2A202602640. Môi trường chính: RTX 6000 Ada, GPU
 - [x] Dừng script tự chạy fold `run_ct_folds.sh` và job con của nó; GPU 1 đã về 2 MiB / 0%.
 - [x] Cài các pin đề vào venv riêng; bổ sung torchvision 0.29.1 và matplotlib 3.10.9.
 - [x] Bộ test gốc trên Linux trước tải dữ liệu: `68 passed, 1 skipped`.
-- [ ] Tải dataset, kiểm chứng split, vẽ 6 ảnh nhãn, commit checkpoint dữ liệu.
+- [x] Tải dataset trên server, xác minh 2.009 ảnh / 4.737 box, không trùng phiên; vẽ 6 ảnh nhãn.
+- [x] Sau tải, test dữ liệu thật: `69 passed`; test bổ sung: `25 passed`.
+- [x] Commit checkpoint môi trường/mã CPU: `95be016`.
+- [x] Đồng bộ audit, 6 ảnh nhãn và metadata split về máy local; ảnh nhãn đã kiểm tra trực quan.
+- [x] Commit checkpoint dữ liệu (xem lịch sử Git, thông điệp `feat: verify deterministic dataset splits and label examples`).
 - [ ] Chạy E0 và commit baseline.
 - [ ] Kiểm chứng 220 token, mask/collate/gradient, commit checkpoint encoding.
 - [ ] Chạy E1/E2/E3 và commit bằng chứng SFT.

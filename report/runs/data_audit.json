@@ -1,0 +1,33 @@
+{
+  "dataset_version": "d10-21e4070301",
+  "counts": {
+    "train": {
+      "images": 1422,
+      "boxes": {
+        "pothole": 1074,
+        "crack": 1750,
+        "manhole": 691
+      }
+    },
+    "val": {
+      "images": 276,
+      "boxes": {
+        "pothole": 66,
+        "crack": 470,
+        "manhole": 103
+      }
+    },
+    "test": {
+      "images": 311,
+      "boxes": {
+        "pothole": 121,
+        "crack": 299,
+        "manhole": 163
+      }
+    }
+  },
+  "n_sessions": 18,
+  "session_leakage": false,
+  "unique_images": 2009,
+  "all_images_verified": true
+}
