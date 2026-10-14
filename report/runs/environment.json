@@ -1,0 +1,16 @@
+{
+  "python": "3.10.12",
+  "platform": "Linux-5.15.0-194-generic-x86_64-with-glibc2.35",
+  "torch": "2.14.1",
+  "torchvision": "0.29.1",
+  "transformers": "5.19.0",
+  "peft": "0.21.2",
+  "trl": "1.9.2",
+  "bitsandbytes": "0.50.2",
+  "accelerate": "1.15.0",
+  "git_head": null,
+  "original_tests": "68 passed, 1 skipped",
+  "student_tests": "25 passed",
+  "physical_gpu": 1,
+  "account": "research02"
+}

@@ -2,7 +2,7 @@
 
 **Sinh viên:** Nguyễn Tuấn Thành  
 **Mã số:** 2A202602640  
-**Môi trường chạy chính:** tài khoản `research03`, máy `bcseserver1`, GPU vật lý số **2**, NVIDIA RTX 6000 Ada khoảng 48 GB VRAM.  
+**Môi trường chạy chính:** tài khoản `research02`, máy `bcseserver1`, GPU vật lý số **1**, NVIDIA RTX 6000 Ada khoảng 48 GB VRAM (cập nhật theo phiên portal mới).  
 **Ưu tiên:** hoàn thành đầy đủ bài bắt buộc với kết quả chạy thật; sau đó thực hiện E5 nếu môi trường hỗ trợ. Không đặt thời hạn chạy cứng.  
 **Trạng thái tài liệu:** kế hoạch trước triển khai; các số F1, VRAM, thời gian và tham số huấn luyện chưa được đo.
 
@@ -31,7 +31,7 @@ Hiện thực pipeline tái lập được: tải dữ liệu → chia theo phi�
 Kế hoạch căn cứ vào `README.md`, `GUIDE.md`, `RUBRIC.md`, `REPORT.md`, `configs/e0.yaml–e5.yaml`, mã nguồn các công cụ gốc và mô tả LMS người dùng cung cấp.
 
 - SSH qua alias `bcse-kit` đã thành công; `nvidia-smi` nhìn thấy 3 GPU RTX 6000 Ada.
-- Người dùng xác nhận toàn quyền sử dụng GPU vật lý số 2. Lần đo trước GPU này đang có tiến trình sử dụng; cần kiểm tra lại trước khi bắt đầu train.
+- Người dùng ban đầu cấp GPU 2, sau đó chuyển sang GPU 1; mọi run lab từ thời điểm cập nhật dùng GPU 1. Kiểm tra job đang chạy trước khi train; người dùng đã cho phép dừng job chiếm GPU được cấp.
 - Xác thực Kaggle trực tiếp từ máy trường thành công: key thật trả HTTP 200; key sai đối chứng trả HTTP 401. Đã đọc được danh sách file dataset; **chưa tải dataset**.
 - Đã chạy `python -m pytest -q` trên máy Windows hiện tại: **68 passed, 1 skipped**. Test dữ liệu thật cần biến `D10_RAW`; cài đặt Python hiện tại có cảnh báo phụ thuộc `requests`, sẽ dùng môi trường Linux riêng khi triển khai.
 - Repo hiện có một commit gốc `c2f3997`; remote `origin` là `https://github.com/Chika1357/K4-Track-4-Day10-VisionLanguageModel.git`. Cần xác minh quyền push và trạng thái Public ở bước chuẩn bị nộp.
@@ -42,7 +42,7 @@ Kế hoạch căn cứ vào `README.md`, `GUIDE.md`, `RUBRIC.md`, `REPORT.md`, `
 
 1. Giữ nguyên `scripts/`, `tests/` và các cấu hình gốc `configs/e0.yaml–e5.yaml`. Mã tự viết nằm trong thư mục mới `lab/`; test bổ sung nằm ngoài `tests/`.
 2. Dùng Linux GPU trường làm nơi train. Máy Windows dùng chỉnh sửa mã, theo dõi, nhận bằng chứng và đóng gói bài.
-3. Mỗi lần chạy chỉ dùng GPU vật lý số 2 bằng `CUDA_VISIBLE_DEVICES=2`. Bên trong tiến trình, GPU này trở thành `cuda:0`; ánh xạ model vào thiết bị 0 đã được giới hạn.
+3. Mỗi lần chạy chỉ dùng GPU vật lý số 1 bằng `CUDA_VISIBLE_DEVICES=1`. Bên trong tiến trình, GPU này trở thành `cuda:0`; ánh xạ model vào thiết bị 0 đã được giới hạn.
 4. E1, E2, E3 đều khởi tạo độc lập từ cùng model gốc, không tiếp tục huấn luyện adapter của setup trước.
 5. Split seed giữ nguyên `day10`; training seed theo cấu hình là `42`. Ghi rõ chúng phục vụ hai mục đích khác nhau.
 6. Gỡ lỗi và lựa chọn checkpoint/cấu hình trên `val`; không dùng nhãn test cho huấn luyện hoặc chọn siêu tham số. Test là đánh giá cuối sau khi chốt mỗi setup.
@@ -94,8 +94,8 @@ Notebook giữ các tiêu đề `## 0.` đến `## 8.` mà bộ test gốc kiể
 
 ### Công việc
 
-1. Đăng nhập `bcse-kit`; kiểm tra tài khoản, hostname, GPU 2, tiến trình đang dùng GPU, dung lượng đĩa và thư mục làm việc.
-2. Xác định tiến trình trên GPU 2 đang chạy gì và thuộc ai. Nếu còn job cũ, làm rõ trước khi chạy job mới; không tự động kill tiến trình chưa xác định.
+1. Đăng nhập `bcse-kit`; kiểm tra tài khoản, hostname, GPU 1, tiến trình đang dùng GPU, dung lượng đĩa và thư mục làm việc.
+2. Xác định tiến trình trên GPU 1 đang chạy gì và thuộc ai. Người dùng đã cho phép dừng job chiếm GPU; đã gửi SIGTERM đến job `research02/tb` PID 3944915 sau khi xác minh, kiểm tra lại trạng thái trước khi train.
 3. Tạo thư mục dự án riêng, chuyển mã hiện tại sang server với checksum/commit tương ứng. Không đưa dữ liệu cá nhân hoặc credential vào gói mã.
 4. Tạo virtual environment; kiểm tra Python, PyTorch, torchvision, CUDA driver và bitsandbytes. Driver báo CUDA 13.0 không có nghĩa phải cài PyTorch CUDA 13.0; chọn bản tương thích và xác minh bằng chạy tensor CUDA.
 5. Thử cài đúng các phiên bản trong `requirements-colab.txt`. Nếu pin không tồn tại hoặc không tương thích, ghi lỗi và phương án riêng trong `requirements-gpu.txt`, giữ file đề gốc và kiểm chứng lại API.
@@ -106,7 +106,7 @@ Notebook giữ các tiêu đề `## 0.` đến `## 8.` mà bộ test gốc kiể
 ### Lệnh định hướng trên server
 
 ```bash
-export CUDA_VISIBLE_DEVICES=2
+export CUDA_VISIBLE_DEVICES=1
 nvidia-smi --query-gpu=index,uuid,name,memory.total,memory.used,utilization.gpu --format=csv
 python -m pytest -q
 python -m pip check
@@ -117,7 +117,7 @@ python -m pip check
 - Môi trường server chạy được công cụ gốc, PyTorch truy cập CUDA và chỉ thấy GPU được cấp.
 - Có log phiên bản Python/PyTorch/CUDA runtime/driver và GPU UUID.
 - Bộ test ban đầu đạt `68 passed, 1 skipped`, hoặc có giải thích cụ thể nếu trạng thái dữ liệu khiến số skipped thay đổi.
-- Không có xung đột tài nguyên chưa xử lý trên GPU 2.
+- Không có xung đột tài nguyên chưa xử lý trên GPU 1.
 
 ## 6. Bước 1 — Dữ liệu và split chống rò rỉ
 
@@ -361,7 +361,7 @@ Alpha thay đổi theo quy tắc `alpha=2*r` của đề, giữ hệ số LoRA s
 | 9 | F1 từng lớp và ít nhất 6 ảnh minh họa lỗi có chú thích |
 | 10 | E4 hai rank, effective config diff, kết quả và mức bất định |
 
-Điền họ tên **Nguyễn Tuấn Thành**, mã số **2A202602640**. Thêm môi trường RTX 6000 Ada/GPU 2, revision model, phiên bản thư viện, ngoại lệ đã xử lý, seed và cách đo tài nguyên. Không diễn giải tốc độ trên RTX 6000 Ada là tốc độ Colab T4.
+Điền họ tên **Nguyễn Tuấn Thành**, mã số **2A202602640**. Thêm môi trường RTX 6000 Ada/GPU 1, revision model, phiên bản thư viện, ngoại lệ đã xử lý, seed và cách đo tài nguyên. Không diễn giải tốc độ trên RTX 6000 Ada là tốc độ Colab T4.
 
 **Sản phẩm:** `REPORT.md`, `CHECKLIST.md`, `BAO_CAO_LOI_VA_LUU_Y.md`, hình và bảng tổng hợp bằng chứng.
 
@@ -471,7 +471,7 @@ Không lấy ước lượng 20–30 phút/run trên T4 làm thời gian cam k�
 | Vấn đề | Hành động | Bằng chứng cần ghi |
 |---|---|---|
 | Gateway `NO_RECENT_AUTH` | Làm mới phiên portal/Cloudflare theo trường; reconnect đúng alias | Trạng thái kết nối, không ghi mật khẩu |
-| GPU 2 còn job đang chạy | Xác định chủ/PID/mục đích và xử lý quyền sử dụng trước run mới | GPU UUID, memory/process snapshot |
+| GPU 1 còn job đang chạy | Xác định chủ/PID/mục đích và dừng đúng job theo quyền đã được cấp | GPU UUID, memory/process snapshot |
 | Pin thư viện không cài được | Giữ file gốc, xác minh phiên bản khả dụng/API, tạo file phụ thuộc Linux riêng | Lỗi cài đặt, version thay thế, test tương thích |
 | Import torchvision/CUDA/bitsandbytes lỗi | Ghép bản torch/torchvision tương thích, test CUDA và quantized forward trong venv | `pip check`, version và kết quả smoke test |
 | Dataset/split khác đề | Kiểm tra dataset version, raw root, nhãn và tên file; không sửa split script | Audit chênh lệch và nguyên nhân |
@@ -488,11 +488,11 @@ Không lấy ước lượng 20–30 phút/run trên T4 làm thời gian cam k�
 
 ## 19. Checklist điều phối
 
-- [x] Đã nhận họ tên, mã số và quyền dùng GPU 2.
+- [x] Đã nhận họ tên, mã số và quyền dùng GPU 1 (thay GPU 2 theo yêu cầu mới).
 - [x] Đã xác minh SSH và Kaggle từ server.
 - [x] Đã chạy baseline test tại Windows: 68 passed, 1 skipped.
 - [x] Đã đọc cấu hình, scorer, checker và test gốc để viết kế hoạch.
-- [ ] Thiết lập venv/server, kiểm tra GPU 2 và full test Linux.
+- [ ] Thiết lập venv/server, kiểm tra GPU 1 và full test Linux.
 - [ ] Tải dataset, audit split, test dữ liệu thật và vẽ nhãn.
 - [ ] Hoàn thiện grounding và evidence E0.
 - [ ] Hoàn thiện mask loss/collate, kiểm chứng 220 token và gradient.

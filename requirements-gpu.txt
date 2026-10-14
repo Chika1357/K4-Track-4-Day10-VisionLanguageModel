@@ -1,0 +1,7 @@
+# Linux environment installed successfully on bcseserver1.
+-r requirements-colab.txt
+torch==2.14.1
+torchvision==0.29.1
+pytest
+matplotlib==3.10.9
+datasets==5.1.0
