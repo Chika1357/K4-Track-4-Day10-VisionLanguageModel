@@ -1,7 +1,7 @@
 Họ tên: Nguyễn Tuấn Thành — Mã số: 2A202602640
 `dataset_version`: d10-21e4070301
 
-> **Trạng thái báo cáo (bản tạm, 2026-10-14):** đã hoàn thành chuẩn bị dữ liệu, E0 zero-shot, kiểm chứng encoding/mask/gradient và E1. E2, E3, E4 **chưa xong**; các ô và câu hỏi phụ thuộc kết quả đó ghi `<điền sau khi chạy ...>` và sẽ cập nhật bằng số đo thật.
+> **Trạng thái báo cáo (bản tạm, 2026-10-14):** đã hoàn thành chuẩn bị dữ liệu, E0 zero-shot, kiểm chứng encoding/mask/gradient và E1. E3, E4 **chưa xong**; các ô và câu hỏi phụ thuộc kết quả đó ghi `<điền sau khi chạy ...>` và sẽ cập nhật bằng số đo thật.
 >
 > Môi trường: NVIDIA RTX 6000 Ada (GPU vật lý số 1, máy `bcseserver1`), **không phải Colab T4**; VRAM/thời gian không so trực tiếp với số mẫu trên T4. Model `Qwen/Qwen3-VL-4B-Instruct` ghim revision `ebb281ec70b05090aa6165b016eac8ec08e71b17`, NF4 4-bit cho LLM, giữ ViT/projector/`lm_head` không lượng tử hoá. Python 3.10.12, torch 2.14.1 (CUDA 13.0), transformers 5.19.0, peft 0.21.2, trl 1.9.2, bitsandbytes 0.50.2.
 
@@ -11,11 +11,11 @@ Họ tên: Nguyễn Tuấn Thành — Mã số: 2A202602640
 |---|---|---|---|---|---|---|---|---|---|---|
 | E0 | zero-shot | 0 | 3.911 (suy luận) | 3.78 (suy luận 311 ảnh) | 0.0875 | 0.0620–0.1143 | 0.936 | 0.1088 | 0.0353 | 0.1790 |
 | E1 | LoRA LLM (r=16) | 33,030,144 | 6.685 (train) | 8.16 (train 300 bước) | 0.2913 | 0.2535–0.3300 | 1.238 | 0.2049 | 0.2212 | 0.5405 |
-| E2 | + projector | 142,135,296 | <điền sau khi chạy E2> | | | | | | | |
+| E2 | + projector | 142,135,296 | 8.408 (train) | 8.24 (train 300 bước) | 0.3270 | 0.2903–0.3694 | 1.119 | 0.1717 | 0.2667 | 0.5857 |
 | E3 | + LoRA ViT | 148,426,752 | <điền sau khi chạy E3> | | | | | | | |
 | E4 | rank LoRA: r=4 và r=64 (alpha=2r) | | <điền sau khi chạy E4> | | | | | | | |
 
-E1: `parse_valid_rate=0.9968` (≥ 0.95), F1 tăng +0.2038 so với E0 (≥ 0.10); val F1=0.1910 (CI95 0.1576–0.2226); suy luận test 4.98 phút, 4.04 GB. VRAM đỉnh đo bằng `torch.cuda.max_memory_allocated` (bytes/1e9). Số tham số E2–E3 lấy từ preflight trên model thật (`report/runs/preflight_e{1,2,3}.json`), chưa phải số của run huấn luyện. E0: `parse_valid_rate=0.8457`, `missing_predictions=0`, `n_images=311`, P=0.1208, R=0.0686 (TP=40, FP=291, FN=583), mean IoU của cặp khớp 0.600; batch 4, greedy, `max_new_tokens=256`.
+E1: `parse_valid_rate=0.9968` (≥ 0.95), F1 tăng +0.2038 so với E0 (≥ 0.10); val F1=0.1910 (CI95 0.1576–0.2226); suy luận test 4.98 phút, 4.04 GB. VRAM đỉnh đo bằng `torch.cuda.max_memory_allocated` (bytes/1e9). E2: `parse_valid_rate=0.9968`, val F1=0.2920 (CI95 0.2530–0.3293); khác biệt E2−E1 trên test +0.0357 nhưng CI95 hai setup chồng lấp. Số tham số E3 lấy từ preflight trên model thật (`report/runs/preflight_e{1,2,3}.json`), chưa phải số của run huấn luyện. E0: `parse_valid_rate=0.8457`, `missing_predictions=0`, `n_images=311`, P=0.1208, R=0.0686 (TP=40, FP=291, FN=583), mean IoU của cặp khớp 0.600; batch 4, greedy, `max_new_tokens=256`.
 
 ## 10 câu hỏi (trả lời bằng **số của bạn**, không chép lại tài liệu)
 
