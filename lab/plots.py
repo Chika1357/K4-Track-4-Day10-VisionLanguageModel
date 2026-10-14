@@ -14,8 +14,6 @@ def plot_results(report_root="report", work_root="work"):
     evidence = [json.loads(path.read_text()) for path in paths]
     labels = [item["name"] for item in evidence]
     means = [item["micro"]["f1"] for item in evidence]
-    errors = [[item["micro"]["f1"]-item["f1_ci95"][0] for item in evidence],
-              [item["f1_ci95"][1]-item["micro"]["f1"] for item in evidence]]
     # Percentile CI can occasionally exclude the point estimate; draw absolute bounds.
     figure, axis = plt.subplots(figsize=(10, 4.5))
     positions = list(range(len(evidence)))

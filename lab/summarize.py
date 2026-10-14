@@ -133,6 +133,25 @@ def generate_report(report_root="report", output="REPORT.md"):
         "Test template gốc yêu cầu REPORT.md còn placeholder, mâu thuẫn checker; giữ nguyên test và báo cáo final test log riêng. "
         "Bài nộp dùng báo cáo đã hoàn chỉnh và check_submission.py 0 FAIL, 0 WARN.", "",
     ]
+    bonus_path=root/"evidence/e5.json"
+    if bonus_path.exists():
+        bonus=json.loads(bonus_path.read_text())
+        if (bonus["dataset_version"]!=audit["dataset_version"] or bonus["split"]!="test"
+                or bonus["n_images"]!=311 or bonus["missing_predictions"]!=0):
+            raise ValueError("E5 evidence differs from the mandatory evaluation")
+        bonus_analysis=json.loads((root/"runs/e5_output_analysis.json").read_text())
+        base=evidence[selection["base_setup"].lower()]
+        lines.extend(["## Bonus E5 — GRPO", "",
+                      f"Khởi tạo từ {selection['base_setup']}, chạy 60 optimizer updates, 4 generations, LR 5e-6, beta=0.",
+                      f"E5 F1={bonus['micro']['f1']:.4f}, CI95={bonus['f1_ci95']}, parse_valid_rate={bonus['parse_valid_rate']:.4f}; "
+                      f"chênh lệch F1 so với SFT nền={bonus['micro']['f1']-base['micro']['f1']:+.4f}.",
+                      f"Tài nguyên đo thật: {bonus['meta']['trainable_params']:,.0f} tham số, "
+                      f"{bonus['meta']['peak_vram_gb']:.3f} GB, {bonus['meta']['train_minutes']:.2f} phút.",
+                      "Reward được test trước train: perfect/invalid/wrong class/extra box/empty, duplicate matching và giant box. "
+                      "Reward tăng không bảo đảm F1 tăng; dưới đây là thống kê output thật để kiểm tra reward hacking:",
+                      "```json",json.dumps(bonus_analysis,ensure_ascii=False,indent=2),"```","",
+                      "Mean test reward là phép phân tích sau đánh giá, không dùng nhãn test để huấn luyện/chọn policy. "
+                      "Số output rỗng trên ảnh có GT và giant box cần đọc cùng recall/FP; không mặc định mọi output rỗng là hacking.",""])
     Path(output).write_text("\n".join(lines), encoding="utf-8")
     return evidence
 
