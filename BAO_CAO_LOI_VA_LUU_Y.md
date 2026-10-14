@@ -18,6 +18,12 @@
 - LoRA ViT E3 cần cả `attn.proj`, ngoài `qkv`, `linear_fc1`, `linear_fc2`; thiếu `proj` sẽ không đủ 96 module ViT / 348 tổng.
 - `tests/test_configs_and_docs.py` yêu cầu REPORT.md còn `<điền`, còn checker yêu cầu xóa placeholder. Lưu baseline test trước khi điền; báo cáo đầy đủ phải ưu tiên yêu cầu nghiệm thu, công bố test template mâu thuẫn và giữ nguyên công cụ gốc.
 
+## Kiểm chứng quantization trên model thật
+
+Lần nạp E0 đầu tiên bị audit dừng trước inference: Transformers 5.19.0 vẫn chuyển các layer `model.visual.*` thành Linear4bit nếu skip list chỉ có `visual`/`lm_head` như ví dụ. Matcher của phiên bản này so prefix/regex từ đầu tên đầy đủ, không tìm substring ở giữa. Đã bổ sung `model.visual` vào skip list trong mã tự viết, kiểm thử matcher của thư viện thực tế và giữ audit kiểu layer để xác nhận ViT/projector/lm_head không bị lượng tử hóa. Chưa sinh prediction từ lần nạp sai này.
+
+Venv kế thừa gói hệ thống ban đầu dùng Jinja2 3.0.3; chat template của Transformers yêu cầu >=3.1.0. Đã chuyển venv sang không kế thừa site-packages, cài Jinja2 3.1.6, PyYAML 6.0.3 và các dependency còn thiếu vào venv riêng. `pip check` xác minh dependency sau sửa; không nâng cấp Python/gói hệ thống.
+
 ## Nguyên tắc số liệu
 
 Không dùng số F1/VRAM/phút mẫu trong đề làm kết quả. Chỉ điền báo cáo từ evidence và log thực tế; công bố rõ GPU RTX 6000 Ada thay Colab T4.

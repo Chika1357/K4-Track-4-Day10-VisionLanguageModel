@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 MODEL_ID = "Qwen/Qwen3-VL-4B-Instruct"
+SKIP_QUANTIZATION_MODULES = ("visual", "model.visual", "lm_head")
 LLM_TARGET = (r".*language_model\.layers\.\d+\.(?:self_attn\.(?:q_proj|k_proj|v_proj|o_proj)"
               r"|mlp\.(?:gate_proj|up_proj|down_proj))")
 VIT_TARGET = (r".*visual\.blocks\.\d+\.(?:attn\.(?:qkv|proj)"
@@ -27,7 +28,7 @@ def load_base(revision, model_id=MODEL_ID):
     quantization = BitsAndBytesConfig(
         load_in_4bit=True, bnb_4bit_quant_type="nf4",
         bnb_4bit_compute_dtype=torch.float16, bnb_4bit_use_double_quant=True,
-        llm_int8_skip_modules=["visual", "lm_head"])
+        llm_int8_skip_modules=list(SKIP_QUANTIZATION_MODULES))
     return Qwen3VLForConditionalGeneration.from_pretrained(
         model_id, revision=revision, quantization_config=quantization,
         dtype=torch.float16, device_map={"": 0}, attn_implementation="sdpa")
@@ -136,13 +137,14 @@ def save_weights(model, directory, setup):
     return result
 
 
-def load_trained(revision, directory):
+def load_trained(revision, directory, trainable=False):
     import torch
     from peft import PeftModel
 
     directory = Path(directory)
     manifest = json.loads((directory / "weights_manifest.json").read_text())
-    model = PeftModel.from_pretrained(load_base(revision), directory / manifest["adapter"])
+    model = PeftModel.from_pretrained(load_base(revision), directory / manifest["adapter"],
+                                     is_trainable=trainable)
     if manifest.get("projector"):
         weights = torch.load(directory / manifest["projector"], map_location="cpu", weights_only=True)
         expected = {n: p for n, p in model.named_parameters() if is_projector(n)}
@@ -157,6 +159,7 @@ def load_trained(revision, directory):
                     raise RuntimeError(f"Invalid projector shape/dtype: {name}")
                 parameter.data = parameter.data.to(torch.float32)
                 parameter.copy_(value.to(parameter.device))
+                parameter.requires_grad = trainable
         actual_hash = tensor_fingerprint({n: p for n, p in model.named_parameters() if is_projector(n)})
         if actual_hash != manifest["projector_sha256"]:
             raise RuntimeError("Reloaded projector values do not match checkpoint")

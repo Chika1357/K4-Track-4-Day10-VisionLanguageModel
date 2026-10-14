@@ -8,7 +8,7 @@ from pathlib import Path
 from PIL import Image
 
 from lab.data import user_messages
-from lab.modeling import load_base, load_processor, load_trained
+from lab.modeling import architecture_audit, load_base, load_processor, load_trained
 from scripts.labcommon import read_jsonl
 
 
@@ -72,6 +72,10 @@ def run_inference(args):
 
     processor = load_processor(args.revision)
     model = load_trained(args.revision, args.checkpoint) if args.checkpoint else load_base(args.revision)
+    if not args.checkpoint:
+        audit_path = Path("report/runs/e0_model_audit.json")
+        audit_path.parent.mkdir(parents=True, exist_ok=True)
+        audit_path.write_text(json.dumps(architecture_audit(model), indent=2))
     records = read_jsonl(Path(args.data_root) / "splits" / f"{args.split}.jsonl")
     result = generate_records(model, processor, records, args.data_root, args.output,
                               args.batch_size, args.max_new_tokens, args.resume)

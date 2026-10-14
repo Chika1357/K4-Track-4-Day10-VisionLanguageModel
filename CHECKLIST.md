@@ -22,12 +22,18 @@ Nguyễn Tuấn Thành — 2A202602640. Môi trường chính: RTX 6000 Ada, GPU
 - [x] Commit checkpoint môi trường/mã CPU: `95be016`.
 - [x] Đồng bộ audit, 6 ảnh nhãn và metadata split về máy local; ảnh nhãn đã kiểm tra trực quan.
 - [x] Commit checkpoint dữ liệu (xem lịch sử Git, thông điệp `feat: verify deterministic dataset splits and label examples`).
-- [ ] Chạy E0 và commit baseline.
+- [x] E0 chạy đủ 311 ảnh test trên GPU 1; `missing_predictions=0`, F1=0.087527, parse_valid_rate=0.845659.
+- [x] Đồng bộ evidence, model audit, ví dụ output thô và raw predictions E0 về local.
+- [x] Commit baseline E0 và tài liệu bàn giao (RUN_GPU.md).
 - [ ] Kiểm chứng 220 token, mask/collate/gradient, commit checkpoint encoding.
 - [ ] Chạy E1/E2/E3 và commit bằng chứng SFT.
 - [ ] Chạy E4 hai rank và commit ablation.
 - [ ] Hoàn thiện báo cáo, minh họa, nghiệm thu và commit hồ sơ.
 - [ ] E5 bonus: reward tests, GRPO và evidence.
 - [ ] Xác minh repo public và chuẩn bị nộp LMS.
+
+## Ghi chú tiếp tục
+
+Phiên Codex dừng sau E0 theo yêu cầu người dùng; Claude Code tiếp tục từ checkpoint encoding qua bridge SSH cục bộ (`work/gpu_bridge.py`, không lưu mật khẩu).
 
 Checkpoint chỉ được đánh dấu hoàn thành khi có kết quả chạy thật và sản phẩm kiểm chứng.

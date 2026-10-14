@@ -1,0 +1,7 @@
+{
+  "projector": 109105152,
+  "vit_excluding_projector": 306242560,
+  "language_and_heads": 4022468096,
+  "total_logical_parameters": 4437815808,
+  "visual_and_lm_head_not_4bit": true
+}

@@ -1,0 +1,44 @@
+{
+  "n_images": 311,
+  "error_images_per_category": {
+    "invalid_json": 48,
+    "extraneous_wrapper": 0,
+    "false_positive": 219,
+    "missed_ground_truth": 290
+  },
+  "most_frequent_observed_categories": [
+    "missed_ground_truth",
+    "false_positive"
+  ],
+  "selection_policy": "first example per observed category, then test order",
+  "examples": [
+    {
+      "image_id": "vlcsnap-00200",
+      "raw": "[{\"label\": \"manhole\", \"bbox_2d\": [770, 640, 843, 686]}, {\"label\": \"manhole\", \"bbox_2d\": [909, 786, 998, 822]}]",
+      "observed_categories": [
+        "false_positive",
+        "missed_ground_truth"
+      ]
+    },
+    {
+      "image_id": "vlcsnap-2025-02-18-23h07m47s847",
+      "raw": "[{\"label\": \"crack\", \"bbox_2d\": [350, 370, 400, 400]}, {\"label\": \"crack\", \"bbox_2d\": [350, 330, 400, 360]}, {\"label\": \"crack\", \"bbox_2d\": [350, 290, 400, 320]}, {\"label\": \"crack\", \"bbox_2d\": [350, 250, 400, 280]}, {\"label\": \"crack\", \"bbox_2d\": [350, 210, 400, 240]}, {\"label\": \"crack\", \"bbox_2d\": [350, 170, 400, 200]}, {\"label\": \"crack\", \"bbox_2d\": [350, 130, 400, 160]}, {\"label\": \"crack\", \"bbox_2d\": [350, 90, 4",
+      "observed_categories": [
+        "invalid_json",
+        "missed_ground_truth"
+      ]
+    },
+    {
+      "image_id": "vlcsnap-00201",
+      "raw": "[]"
+    },
+    {
+      "image_id": "vlcsnap-00202",
+      "raw": "[{\"label\": \"manhole\", \"bbox_2d\": [309, 686, 399, 714]}]"
+    },
+    {
+      "image_id": "vlcsnap-00203",
+      "raw": "[]"
+    }
+  ]
+}
