@@ -1,0 +1,65 @@
+{
+  "selection_policy": "first unique example per error category, then remaining test order",
+  "examples": [
+    {
+      "filename": "prediction_e3_1.png",
+      "image_id": "vlcsnap-00202",
+      "category": "success",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "parse_valid": true
+    },
+    {
+      "filename": "prediction_e3_2.png",
+      "image_id": "vlcsnap-00200",
+      "category": "false_positive",
+      "tp": 1,
+      "fp": 1,
+      "fn": 1,
+      "parse_valid": true
+    },
+    {
+      "filename": "prediction_e3_3.png",
+      "image_id": "vlcsnap-00201",
+      "category": "missed",
+      "tp": 0,
+      "fp": 1,
+      "fn": 2,
+      "parse_valid": true
+    },
+    {
+      "filename": "prediction_e3_4.png",
+      "image_id": "vlcsnap-00203",
+      "category": "additional_representative",
+      "tp": 0,
+      "fp": 1,
+      "fn": 1,
+      "parse_valid": true
+    },
+    {
+      "filename": "prediction_e3_5.png",
+      "image_id": "vlcsnap-00204",
+      "category": "additional_representative",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "parse_valid": true
+    },
+    {
+      "filename": "prediction_e3_6.png",
+      "image_id": "vlcsnap-00205",
+      "category": "additional_representative",
+      "tp": 1,
+      "fp": 2,
+      "fn": 1,
+      "parse_valid": true
+    }
+  ],
+  "category_totals": {
+    "success": 106,
+    "false_positive": 167,
+    "missed": 187,
+    "invalid_json": 0
+  }
+}
