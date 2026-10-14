@@ -25,7 +25,7 @@ Nguyễn Tuấn Thành — 2A202602640. Môi trường chính: RTX 6000 Ada, GPU
 - [x] E0 chạy đủ 311 ảnh test trên GPU 1; `missing_predictions=0`, F1=0.087527, parse_valid_rate=0.845659.
 - [x] Đồng bộ evidence, model audit, ví dụ output thô và raw predictions E0 về local.
 - [x] Commit baseline E0 và tài liệu bàn giao (RUN_GPU.md).
-- [ ] Kiểm chứng 220 token, mask/collate/gradient, commit checkpoint encoding.
+- [x] Kiểm chứng 220 token, mask/collate/gradient, commit checkpoint encoding: E1/E2/E3 đều 220 vision token, 312 masked/250 supervised, kết thúc `<|im_end|>`; module LoRA 252/252/348, gradient đúng nhóm, không tham số đóng băng nhận gradient.
 - [ ] Chạy E1/E2/E3 và commit bằng chứng SFT.
 - [ ] Chạy E4 hai rank và commit ablation.
 - [ ] Hoàn thiện báo cáo, minh họa, nghiệm thu và commit hồ sơ.
